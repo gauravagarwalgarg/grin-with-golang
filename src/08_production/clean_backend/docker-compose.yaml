@@ -1,0 +1,35 @@
+version: "3.8"
+
+# LEARNING NOTES:
+# - docker-compose orchestrates multiple containers (app + database)
+# - The app depends on MongoDB compose handles startup order
+# - Named volume (dbdata) persists data across container restarts
+# - env_file injects .env vars into both containers
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clean-backend-app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:7.0
+    container_name: clean-backend-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${DB_PASS}
+    ports:
+      - "27017:27017"
+    volumes:
+      - dbdata:/data/db
+
+volumes:
+  dbdata:

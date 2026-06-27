@@ -1,0 +1,25 @@
+# Dockerfile.local Development image with hot-reload via air
+#
+# LEARNING NOTES:
+# - Uses 'air' for live-reloading on file changes (like nodemon for Go)
+# - Mounts source as a volume so changes reflect instantly
+# - NOT for production use the multi-stage Dockerfile instead
+
+FROM golang:1.21-alpine
+
+RUN apk add --no-cache git
+
+# Install air for hot-reload
+RUN go install github.com/cosmtrek/air@latest
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+EXPOSE 8080
+
+# Air watches for file changes and rebuilds automatically
+CMD ["air", "-c", ".air.toml"]

@@ -1,0 +1,44 @@
+# docker-compose.local.yaml
+# Full local development stack: App + MongoDB + hot-reload
+#
+# Usage:
+#   docker-compose -f docker-compose.local.yaml up --build
+#
+# This gives you:
+#   - MongoDB at localhost:27017
+#   - App at localhost:8080 (rebuilds on code change with volume mount)
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: clean-backend-dev
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:7.0
+    container_name: clean-backend-mongo-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-dev-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo-dev-data:
