@@ -1,0 +1,16 @@
+# ConfigMap: non-sensitive configuration injected as env vars into pods.
+# LEARNING: Separate config from code. Change config without rebuilding the image.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clean-backend-config
+  namespace: clean-backend
+data:
+  APP_ENV: "production"
+  SERVER_ADDRESS: ":8080"
+  CONTEXT_TIMEOUT: "2"
+  DB_HOST: "mongodb-svc"
+  DB_PORT: "27017"
+  DB_NAME: "clean_backend_db"
+  ACCESS_TOKEN_EXPIRY_HOUR: "2"
+  REFRESH_TOKEN_EXPIRY_HOUR: "168"

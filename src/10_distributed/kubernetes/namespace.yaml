@@ -1,0 +1,9 @@
+# Namespace isolates resources (pods, services, secrets) from other apps.
+# LEARNING: Always deploy to a dedicated namespace, never "default".
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clean-backend
+  labels:
+    app: clean-backend
+    environment: production

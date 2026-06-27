@@ -1,0 +1,47 @@
+// user.proto Protobuf definition for the User gRPC service.
+//
+// LEARNING NOTES:
+// - Protobuf is a language-neutral serialization format (like JSON but binary, 3-10x faster)
+// - 'service' defines RPC methods; 'message' defines data structures
+// - Field numbers (= 1, = 2) are the wire format identifiers NEVER reuse them
+// - 'stream' keyword enables server-side or bidirectional streaming
+//
+// Generate Go code with:
+//   protoc --go_out=. --go-grpc_out=. proto/user.proto
+
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/GauravAgarwalGarg/grin-with-golang/src/10_distributed/grpc_service/pb";
+
+// UserService provides user CRUD over gRPC.
+service UserService {
+  // Unary RPC: single request → single response
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  rpc CreateUser(CreateUserRequest) returns (UserResponse);
+
+  // Server-streaming RPC: single request → stream of responses
+  rpc ListUsers(ListUsersRequest) returns (stream UserResponse);
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}

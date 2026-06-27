@@ -1,0 +1,36 @@
+# NSQ local development stack
+# Usage: docker-compose up -d
+#
+# Ports:
+#   4150 - nsqd TCP (producers connect here)
+#   4151 - nsqd HTTP
+#   4160 - nsqlookupd TCP
+#   4161 - nsqlookupd HTTP (consumers discover topics here)
+#   4171 - nsqadmin web UI
+
+version: "3.8"
+
+services:
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+    ports:
+      - "4160:4160"
+      - "4161:4161"
+
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=localhost
+    ports:
+      - "4150:4150"
+      - "4151:4151"
+    depends_on:
+      - nsqlookupd
+
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    ports:
+      - "4171:4171"
+    depends_on:
+      - nsqlookupd

@@ -1,0 +1,17 @@
+# Service: stable network endpoint that load-balances across pod replicas.
+# LEARNING: Pods are ephemeral (IPs change). Services provide a stable DNS name
+# (clean-backend.clean-backend.svc.cluster.local) that routes to healthy pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: clean-backend
+  namespace: clean-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: clean-backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

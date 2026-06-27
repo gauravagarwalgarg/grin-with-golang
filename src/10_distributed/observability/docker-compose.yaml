@@ -1,0 +1,56 @@
+# Full Observability Stack: Prometheus + Tempo + Grafana
+#
+# LEARNING NOTES:
+# - Prometheus: scrapes /metrics from your app every 15s, stores time-series
+# - Tempo: receives OTLP traces, stores them, queryable via Grafana
+# - Grafana: unified dashboard for metrics (Prometheus) + traces (Tempo)
+#
+# Usage: docker-compose up -d
+# Then run: go run main.go
+#
+# Dashboards:
+#   Grafana: http://localhost:3000 (admin/admin)
+#   Prometheus: http://localhost:9090
+
+version: "3.8"
+
+services:
+  # --- Metrics ---
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+
+  # --- Distributed Tracing ---
+  tempo:
+    image: grafana/tempo:2.3.1
+    container_name: tempo
+    ports:
+      - "3200:3200"   # Tempo query API
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo/config.yaml
+    command:
+      - "-config.file=/etc/tempo/config.yaml"
+
+  # --- Visualization ---
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    depends_on:
+      - prometheus
+      - tempo

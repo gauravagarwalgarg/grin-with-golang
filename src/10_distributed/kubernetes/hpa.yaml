@@ -1,0 +1,46 @@
+# HorizontalPodAutoscaler: automatically scales pods based on metrics.
+#
+# LEARNING NOTES:
+# - Scales between minReplicas and maxReplicas
+# - averageUtilization: % of resource request that triggers scaling
+# - Example: 3 pods at 100m CPU, target 70% → scales up at 70m average
+# - Scale-up is fast (seconds); scale-down has a cooldown (5 min default)
+# - For C++ devs: like a thread pool that auto-resizes based on queue depth
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: clean-backend-hpa
+  namespace: clean-backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: clean-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 min before scaling down
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60  # Remove at most 1 pod per minute
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 60  # Add up to 4 pods per minute

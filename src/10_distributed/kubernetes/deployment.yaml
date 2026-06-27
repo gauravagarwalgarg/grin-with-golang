@@ -1,0 +1,63 @@
+# Deployment: manages replica pods with rolling updates.
+#
+# LEARNING NOTES:
+# - replicas: how many pod copies run simultaneously
+# - resources: CPU/memory requests (scheduling) and limits (hard cap)
+# - readinessProbe: K8s only sends traffic to pods that pass this check
+# - livenessProbe: K8s restarts pods that fail this check (zombie detection)
+# - rollingUpdate: zero-downtime deploys (new pods start before old ones die)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clean-backend
+  namespace: clean-backend
+  labels:
+    app: clean-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: clean-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # At most 1 extra pod during update
+      maxUnavailable: 0  # Never reduce below desired count
+  template:
+    metadata:
+      labels:
+        app: clean-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: clean-backend
+          image: clean-backend:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: clean-backend-config
+            - secretRef:
+                name: clean-backend-secrets
+          resources:
+            requests:
+              cpu: "100m"       # 0.1 CPU core minimum
+              memory: "128Mi"  # 128MB minimum
+            limits:
+              cpu: "500m"      # 0.5 CPU core maximum
+              memory: "256Mi"  # 256MB maximum (OOMKilled if exceeded)
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
