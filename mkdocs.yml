@@ -1,18 +1,66 @@
 site_name: Grin With Golang
+site_description: The Ultimate Go Playbook From High School Basics to Bare-Metal Scale
 site_url: https://gauravagarwalgarg.github.io/grin-with-golang/
 repo_url: https://github.com/GauravAgarwalGarg/grin-with-golang
+repo_name: GauravAgarwalGarg/grin-with-golang
+
 theme:
   name: material
   palette:
     - scheme: slate
+      primary: cyan
+      accent: teal
   features:
+    - navigation.tabs
     - navigation.sections
+    - navigation.expand
+    - navigation.top
     - content.code.copy
     - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
 markdown_extensions:
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - admonition
+  - pymdownx.details
   - tables
   - toc:
       permalink: true
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Foundations:
+    - Go vs C++: 01-go-vs-cpp.md
+    - Variables & Types: modules/01-foundations.md
+    - Functions & Control Flow: modules/01-foundations.md
+  - Data Structures:
+    - Slices, Maps & Structs: modules/02-data-structures.md
+    - Generics: modules/06-generics.md
+  - Concurrency:
+    - Goroutines & Channels: modules/03-concurrency.md
+    - GMP Scheduler: 03-gmp-scheduler.md
+    - Channels Internals: 04-channels-internals.md
+  - Interfaces & Design:
+    - Interfaces Under the Hood: 05-interfaces-under-hood.md
+    - Composition & SOLID: modules/04-interfaces-design.md
+  - Patterns:
+    - Production Patterns: modules/05-patterns.md
+  - Networking:
+    - TCP, HTTP, gRPC: modules/06-networking.md
+  - Systems Internals:
+    - Memory & GC: 02-memory-and-gc.md
+    - Escape Analysis & Profiling: modules/07-systems.md
+  - Production:
+    - Testing, CI/CD, Layout: modules/08-production.md
+  - DSA:
+    - Data Structures in Go: modules/09-dsa.md
+    - Interview Roadmap: 09-interview-roadmap.md
+  - Distributed Systems:
+    - Kafka, Redis, K8s: modules/10-distributed.md
