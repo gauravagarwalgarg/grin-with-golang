@@ -1,5 +1,12 @@
 # GrinWithGolang 🐹
 
+[![CI](https://github.com/gauravagarwalgarg/grin-with-golang/actions/workflows/ci.yml/badge.svg)](https://github.com/gauravagarwalgarg/grin-with-golang/actions/workflows/ci.yml) [![Docs](https://img.shields.io/badge/docs-live-blue?logo=github)](https://gauravagarwalgarg.github.io/grin-with-golang/) ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white) [![License](https://img.shields.io/github/license/gauravagarwalgarg/grin-with-golang)](https://github.com/gauravagarwalgarg/grin-with-golang/blob/main/LICENSE)
+
+> 📖 **Documentation**: [https://gauravagarwalgarg.github.io/grin-with-golang/](https://gauravagarwalgarg.github.io/grin-with-golang/)
+>
+> 📦 **Repository**: [GitHub](https://github.com/gauravagarwalgarg/grin-with-golang)
+
+
 > **The Ultimate Go Playbook: From High School Basics to Bare-Metal Scale**
 
 A definitive, production-quality Go masterclass that takes you from zero to Principal Staff Engineer designing global-scale distributed systems.
