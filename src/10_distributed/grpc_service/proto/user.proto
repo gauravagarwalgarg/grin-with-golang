@@ -13,7 +13,7 @@ syntax = "proto3";
 
 package user;
 
-option go_package = "github.com/GauravAgarwalGarg/grin-with-golang/src/10_distributed/grpc_service/pb";
+option go_package = "github.com/GauravAgarwalGarg/GrinWithGolang/src/10_distributed/grpc_service/pb";
 
 // UserService provides user CRUD over gRPC.
 service UserService {

@@ -13,6 +13,16 @@ run:
 build:
 	@echo "=== Building all modules ==="
 	@find src -name "main.go" -exec dirname {} \; | sort | while read dir; do \
+		skip=0; \
+		d=$$dir; \
+		while [ "$$d" != "src" ] && [ "$$d" != "." ]; do \
+			if [ -f "$$d/go.mod" ]; then skip=1; break; fi; \
+			d=$$(dirname $$d); \
+		done; \
+		if [ $$skip -eq 1 ]; then \
+			echo "  Skipping $$dir (sub-module with own go.mod)"; \
+			continue; \
+		fi; \
 		echo "  Building $$dir..."; \
 		go build -o /dev/null ./$$dir 2>&1 || echo "  FAILED: $$dir"; \
 	done

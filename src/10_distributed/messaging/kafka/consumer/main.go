@@ -7,11 +7,14 @@
 // - "At-least-once" by default: commit after processing (may reprocess on crash)
 // - "Exactly-once" requires idempotent writes or transactional processing
 //
+// Using segmentio/kafka-go: pure Go client (no CGO/librdkafka needed).
+//
 // Run: go run consumer/main.go
 // Requires: Kafka broker on localhost:9092
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,7 +22,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	kafkago "github.com/segmentio/kafka-go"
 )
 
 type PaymentEvent struct {
@@ -32,57 +35,53 @@ type PaymentEvent struct {
 }
 
 func main() {
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
-		"group.id":          "payment-processor",  // Consumer group
-		"auto.offset.reset": "earliest",           // Start from beginning if no offset stored
-		"enable.auto.commit": true,                 // Auto-commit offsets every 5s
+	// kafka-go Reader = consumer with consumer group support
+	reader := kafkago.NewReader(kafkago.ReaderConfig{
+		Brokers: []string{"localhost:9092"},
+		Topic:   "payments",
+		GroupID: "payment-processor", // Consumer group
+		// StartOffset: kafkago.FirstOffset, // Start from beginning if no offset stored (default with GroupID)
 	})
-	if err != nil {
-		log.Fatalf("Failed to create consumer: %v", err)
-	}
-	defer consumer.Close()
-
-	// Subscribe to the "payments" topic
-	err = consumer.SubscribeTopics([]string{"payments"}, nil)
-	if err != nil {
-		log.Fatalf("Failed to subscribe: %v", err)
-	}
+	defer reader.Close()
 
 	fmt.Println("Kafka consumer started. Waiting for messages...")
 
 	// Graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	run := true
-	for run {
-		select {
-		case <-sigChan:
-			run = false
-		default:
-			msg, err := consumer.ReadMessage(-1) // Block until message
-			if err != nil {
-				log.Printf("Consumer error: %v", err)
-				continue
-			}
+	go func() {
+		<-sigChan
+		fmt.Println("\nShutdown signal received...")
+		cancel()
+	}()
 
-			var event PaymentEvent
-			if err := json.Unmarshal(msg.Value, &event); err != nil {
-				log.Printf("Unmarshal error: %v", err)
-				continue
+	for {
+		msg, err := reader.ReadMessage(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
+				break // Context cancelled, clean shutdown
 			}
-
-			// Process the event
-			fmt.Printf("[Partition %d | Offset %d] Payment: %s | User: %s | $%.2f | %s\n",
-				msg.TopicPartition.Partition,
-				msg.TopicPartition.Offset,
-				event.PaymentID,
-				event.UserID,
-				event.Amount,
-				event.Status,
-			)
+			log.Printf("Consumer error: %v", err)
+			continue
 		}
+
+		var event PaymentEvent
+		if err := json.Unmarshal(msg.Value, &event); err != nil {
+			log.Printf("Unmarshal error: %v", err)
+			continue
+		}
+
+		// Process the event
+		fmt.Printf("[Partition %d | Offset %d] Payment: %s | User: %s | $%.2f | %s\n",
+			msg.Partition,
+			msg.Offset,
+			event.PaymentID,
+			event.UserID,
+			event.Amount,
+			event.Status,
+		)
 	}
 
 	fmt.Println("Consumer shutting down...")

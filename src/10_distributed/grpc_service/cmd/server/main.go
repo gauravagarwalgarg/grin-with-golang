@@ -16,7 +16,7 @@ import (
 	"net"
 	"sync"
 
-	pb "github.com/GauravAgarwalGarg/grin-with-golang/src/10_distributed/grpc_service/pb"
+	pb "github.com/GauravAgarwalGarg/GrinWithGolang/src/10_distributed/grpc_service/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

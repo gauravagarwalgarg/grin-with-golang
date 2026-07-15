@@ -14,8 +14,16 @@
 ## Quick Start
 
 ```bash
+# Automated setup (recommended for first time)
+git clone https://github.com/GauravAgarwalGarg/grin-with-golang.git
+cd grin-with-golang
+chmod +x scripts/setup.sh && ./scripts/setup.sh
+
+# Or just run an example
 go run src/01_foundations/01_hello_world/main.go
 ```
+
+👉 **[Full Setup & Prerequisites →](setup.md)**
 
 ## Deep Dives
 
@@ -30,11 +38,11 @@ go run src/01_foundations/01_hello_world/main.go
 
 ## Code Stats
 
-62 compilable Go source files across 10 modules. Every file:
+62+ compilable Go source files across 10 modules. Every file:
 
 - Has `package main` + `func main()` runs independently
 - Dual-tone commentary (beginner analogies + C++ comparisons)
-- Standard library only no external dependencies
+- Modules 01–09 use standard library only; Module 10 uses external deps (Kafka, gRPC, MongoDB, etc.)
 
 ## Module Map
 

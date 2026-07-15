@@ -90,14 +90,34 @@ Build real distributed systems with Kafka, Redis, gRPC, Kubernetes, and observab
 ## Quick Start
 
 ```bash
-# Run any example
-go run src/01_foundations/01_hello_world/main.go
+# Clone and setup (installs tools, generates gRPC code, verifies build)
+git clone https://github.com/GauravAgarwalGarg/grin-with-golang.git
+cd grin-with-golang
+chmod +x scripts/setup.sh
+./scripts/setup.sh
 
-# Build-check everything
+# Or manually:
+go mod tidy
 make build
+```
 
-# Run tests
-make test
+### Prerequisites
+
+| Tool | Required | Install |
+|------|----------|---------|
+| **Go 1.22+** | ✅ Yes | [go.dev/dl](https://go.dev/dl/) |
+| **protoc** | ⚡ For gRPC module | `brew install protobuf` |
+| **Docker** | 🔧 Optional | For databases, Kafka, NSQ |
+
+> 📖 See [Setup & Prerequisites](https://gauravagarwalgarg.github.io/grin-with-golang/setup/) for full details.
+
+### Run Examples
+
+```bash
+make run                                                  # Run hello world
+make run FILE=src/03_concurrency/01_goroutines/main.go    # Run specific file
+make build                                                # Verify all modules compile
+make test                                                 # Run all tests
 ```
 
 ---

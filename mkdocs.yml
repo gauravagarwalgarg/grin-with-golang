@@ -36,6 +36,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Setup: setup.md
   - Foundations:
     - Go vs C++: 01-go-vs-cpp.md
     - Variables & Types: modules/01-foundations.md

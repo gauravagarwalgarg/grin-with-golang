@@ -10,17 +10,20 @@
 // For C++ devs: Kafka is like a distributed ring buffer with persistent storage
 // and consumer offset tracking (similar to shared memory segments with seek).
 //
+// Using segmentio/kafka-go: pure Go client (no CGO/librdkafka needed).
+//
 // Run: go run producer/main.go
 // Requires: Kafka broker on localhost:9092
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	kafkago "github.com/segmentio/kafka-go"
 )
 
 type PaymentEvent struct {
@@ -33,33 +36,16 @@ type PaymentEvent struct {
 }
 
 func main() {
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
-		"acks":              "all",  // Wait for all replicas (strongest durability)
-		"retries":           5,      // Retry on transient failures
-		"linger.ms":         10,     // Batch messages for 10ms (throughput vs latency tradeoff)
-	})
-	if err != nil {
-		log.Fatalf("Failed to create producer: %v", err)
+	// kafka-go uses a Writer abstraction (handles batching, retries, partitioning)
+	writer := &kafkago.Writer{
+		Addr:         kafkago.TCP("localhost:9092"),
+		Topic:        "payments",
+		Balancer:     &kafkago.Hash{},       // Key-based partitioning: same key → same partition
+		RequiredAcks: kafkago.RequireAll,    // Wait for all replicas (strongest durability)
+		BatchTimeout: 10 * time.Millisecond, // Batch messages for 10ms (throughput vs latency tradeoff)
+		MaxAttempts:  5,                     // Retry on transient failures
 	}
-	defer producer.Close()
-
-	topic := "payments"
-
-	// Delivery report goroutine (async confirmation)
-	go func() {
-		for e := range producer.Events() {
-			switch ev := e.(type) {
-			case *kafka.Message:
-				if ev.TopicPartition.Error != nil {
-					fmt.Printf("FAILED delivery: %v\n", ev.TopicPartition)
-				} else {
-					fmt.Printf("Delivered to partition %d at offset %v\n",
-						ev.TopicPartition.Partition, ev.TopicPartition.Offset)
-				}
-			}
-		}
-	}()
+	defer writer.Close()
 
 	// Publish 10 payment events
 	for i := 1; i <= 10; i++ {
@@ -75,21 +61,19 @@ func main() {
 		body, _ := json.Marshal(event)
 
 		// Key = UserID → all events for the same user go to the same partition (ordered)
-		err = producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Key:            []byte(event.UserID),
-			Value:          body,
-		}, nil)
+		err := writer.WriteMessages(context.Background(), kafkago.Message{
+			Key:   []byte(event.UserID),
+			Value: body,
+		})
 
 		if err != nil {
 			log.Printf("Produce error: %v", err)
+		} else {
+			fmt.Printf("Sent: %s ($%.2f)\n", event.PaymentID, event.Amount)
 		}
 
-		fmt.Printf("Sent: %s ($%.2f)\n", event.PaymentID, event.Amount)
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	// Wait for all messages to be delivered
-	producer.Flush(5000)
 	fmt.Println("\nAll payment events published!")
 }
